@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Dom's Apple Pay</title>
+  <meta charset="UTF-8">
+  <!-- JQuery Lib -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- PowerBoard Javascript Lib -->
+  <script src="https://widget.preproduction.powerboard.commbank.com.au/sdk/latest/widget.umd.js"></script>
+</head>
+
+<body onload="generateGooglePayToken();">
+  <!-- Div for PowerBoard Widget -->
+  <div id="widget-google-pay"></div>
+  <!-- Input for GooglePay Token -->
+  <input type="text" id="google-pay-token" class="form-control">
+  <!-- Button for PowerBoard GooglePay-->
+  <button type="button" id="button-googlepay" onclick="generateGooglePayButton();">Click to launch!</button>
+
+
+  <!-- Step 1 - Generate Wallet Token via PowerBoard APIs-->
+  <script>
+    function generateGooglePayToken() {
+
+      var settings = {
+  "url": "https://api.preproduction.powerboard.commbank.com.au/v1/charges/wallet",
+  "method": "POST",
+  "timeout": 0,
+  "headers": {
+    "x-user-secret-key": "8894fc04a97c12a5f3dd081becb3a56810e4cad0",
+    "Content-Type": "application/json"
+  },
+  "data": JSON.stringify({
+    "customer": {
+      "payment_source": {
+        "gateway_id": "6711c12b1b3788cfafd9cc65"
+      }
+    },
+    "meta": {
+      "store_id": "123456789",
+      "store_name": "Dom Apple Pay Test"
+    },
+    "amount": 250.00,
+    "reference": "Dom Apple Pay Test",
+    "description": "Dom Apple Pay Test",
+    "currency": "AUD"
+  }),
+};
+
+$.ajax(settings).done(function (response) {
+   console.log(JSON.stringify(response.resource.data.token))
+        document.getElementById("google-pay-token").value = (response.resource.data.token);
+});
+    }
+  </script>
+
+  <!-- Step 2 - Render Wallet Button via PowerBoard Widget -->
+  <script>
+    function generateGooglePayButton() {
+      let button = new cba.WalletButtons("#widget-google-pay", document.getElementById("google-pay-token").value,
+        {
+          amount_label: "Total",
+          country: 'AU',
+          wallet: ["apple", "google"]
+        }
+      );
+      button.setEnv('preproduction_cba');
+      button.onUnavailable(() => console.log("No wallet buttons available"));
+      button.onPaymentSuccessful((data) => alert('Your Transaction was Approved!'));
+      button.onPaymentInReview((data) => console.log("The payment is on fraud review"));
+      button.load();
+    }
+  </script>
+</body>
+
+</html>
